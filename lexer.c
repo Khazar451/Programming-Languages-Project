@@ -2,6 +2,7 @@
 #include <ctype.h>
 #include <string.h>
 
+/* Global declarations */
 int charClass;
 char lexeme[100];
 char nextChar;
@@ -9,16 +10,20 @@ int lexLen;
 int nextToken;
 FILE *in_fp;
 
+/* Function declarations */
 void addChar();
 void getChar();
 void getNonBlank();
 int lex();
 int lookup(char ch);
+int isKeyword(char *lex);
 
+/* Character classes */
 #define LETTER 0
 #define DIGIT 1
 #define UNKNOWN 99
 
+/* Token codes */
 #define INT_LIT 10
 #define IDENT 11
 #define ASSIGN_OP 20
@@ -31,26 +36,39 @@ int lookup(char ch);
 #define INT_TYPE 27   /* tam_sayı */
 #define IF 28         /* eğer */
 #define ELSE 29       /* değilse */
+#define ISE 38        /* ise */
 #define WHILE 30      /* iken */
+#define FOR 39        /* için */
 #define PRINT 31      /* yazdır */
 #define EQ_OP 32      /* == */
+#define NEQ_OP 40     /* != */
 #define LT_OP 33      /* < */
+#define LE_OP 41      /* <= */
 #define GT_OP 34      /* > */
+#define GE_OP 42      /* >= */
 #define LEFT_BRACE 35 /* { */
 #define RIGHT_BRACE 36/* } */
 #define SEMICOLON 37  /* ; */
 #define EOF_CODE -1
 
-int isTurkishLetter(char c) {
-    return (c == 'ç' || c == 'Ç' || c == 'ğ' || c == 'Ğ' || 
-            c == 'ı' || c == 'I' || c == 'İ' || c == 'ö' || 
-            c == 'Ö' || c == 'ş' || c == 'Ş' || c == 'ü' || c == 'Ü');
+int isValidBNFChar(char c) {
+    /* Standard ASCII letters */
+    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) return 1;
+    /* Turkish lowercase: ç, ğ, ı, ö, ş, ü */
+    if (c == 'ç' || c == 'ğ' || c == 'ı' || c == 'ö' || c == 'ş' || c == 'ü') return 1;
+    /* Turkish uppercase: Ç, Ğ, İ, Ö, Ş, Ü */
+    if (c == 'Ç' || c == 'Ğ' || c == 'İ' || c == 'Ö' || c == 'Ş' || c == 'Ü') return 1;
+    return 0;
+}
+
+int isValidBNFDigit(char c) {
+    return (c >= '0' && c <= '9');
 }
 
 void addChar() {
     if (lexLen <= 98) {
         lexeme[lexLen++] = nextChar;
-        lexeme[lexLen] = 0;
+        lexeme[lexLen] = '\0';
     } else {
         printf("Error: lexeme is too long\n");
     }
@@ -58,9 +76,9 @@ void addChar() {
 
 void getChar() {
     if ((nextChar = getc(in_fp)) != EOF) {
-        if (isalpha(nextChar) || isTurkishLetter(nextChar))
+        if (isValidBNFChar(nextChar))
             charClass = LETTER;
-        else if (isdigit(nextChar))
+        else if (isValidBNFDigit(nextChar))
             charClass = DIGIT;
         else
             charClass = UNKNOWN;
@@ -77,87 +95,57 @@ void getNonBlank() {
 int lookup(char ch) {
     switch (ch) {
         case '(':
-            addChar();
-            nextToken = LEFT_PAREN;
-            break;
+            addChar(); nextToken = LEFT_PAREN; break;
         case ')':
-            addChar();
-            nextToken = RIGHT_PAREN;
-            break;
+            addChar(); nextToken = RIGHT_PAREN; break;
         case '+':
-            addChar();
-            nextToken = ADD_OP;
-            break;
+            addChar(); nextToken = ADD_OP; break;
         case '-':
-            addChar();
-            nextToken = SUB_OP;
-            break;
+            addChar(); nextToken = SUB_OP; break;
         case '*':
-            addChar();
-            nextToken = MULT_OP;
-            break;
+            addChar(); nextToken = MULT_OP; break;
         case '/':
-            addChar();
-            nextToken = DIV_OP;
-            break;
+            addChar(); nextToken = DIV_OP; break;
         case '=':
             addChar();
-            if (nextChar == '=') {
-                addChar();
-                nextToken = EQ_OP;
-            } else {
-                nextToken = ASSIGN_OP;
-            }
+            if (nextChar == '=') { addChar(); nextToken = EQ_OP; }
+            else { nextToken = ASSIGN_OP; }
+            break;
+        case '!':
+            addChar();
+            if (nextChar == '=') { addChar(); nextToken = NEQ_OP; }
+            else { nextToken = EOF_CODE; }
             break;
         case '<':
             addChar();
-            nextToken = LT_OP;
+            if (nextChar == '=') { addChar(); nextToken = LE_OP; }
+            else { nextToken = LT_OP; }
             break;
         case '>':
             addChar();
-            nextToken = GT_OP;
+            if (nextChar == '=') { addChar(); nextToken = GE_OP; }
+            else { nextToken = GT_OP; }
             break;
         case '{':
-            addChar();
-            nextToken = LEFT_BRACE;
-            break;
+            addChar(); nextToken = LEFT_BRACE; break;
         case '}':
-            addChar();
-            nextToken = RIGHT_BRACE;
-            break;
+            addChar(); nextToken = RIGHT_BRACE; break;
         case ';':
-            addChar();
-            nextToken = SEMICOLON;
-            break;
+            addChar(); nextToken = SEMICOLON; break;
         default:
-            addChar();
-            nextToken = EOF_CODE;
-            break;
+            addChar(); nextToken = EOF_CODE; break;
     }
     return nextToken;
 }
 
 int isKeyword(char *lex) {
-    if (strcmp(lex, "tam_sayı") == 0) {
-        nextToken = INT_TYPE;
-        return 1;
-    }
-    if (strcmp(lex, "eğer") == 0) {
-        nextToken = IF;
-        return 1;
-    }
-    if (strcmp(lex, "değilse") == 0) {
-        nextToken = ELSE;
-        return 1;
-    }
-    if (strcmp(lex, "iken") == 0) {
-        nextToken = WHILE;
-        return 1;
-    }
-    if (strcmp(lex, "yazdır") == 0) {
-        nextToken = PRINT;
-        return 1;
-    }
+    if (strcmp(lex, "tam_sayı") == 0)   { nextToken = INT_TYPE; return 1; }
+    if (strcmp(lex, "eğer") == 0)       { nextToken = IF;       return 1; }
+    if (strcmp(lex, "değilse") == 0)    { nextToken = ELSE;     return 1; }
+    if (strcmp(lex, "ise") == 0)        { nextToken = ISE;      return 1; }
+    if (strcmp(lex, "iken") == 0)       { nextToken = WHILE;    return 1; }
+    if (strcmp(lex, "için") == 0)       { nextToken = FOR;      return 1; }
+    if (strcmp(lex, "yazdır") == 0)     { nextToken = PRINT;    return 1; }
     return 0;
 }
 
@@ -169,7 +157,8 @@ int lex() {
         case LETTER:
             addChar();
             getChar();
-            while (charClass == LETTER || charClass == DIGIT || isTurkishLetter(nextChar)) {
+            
+            while (charClass == LETTER || charClass == DIGIT) {
                 addChar();
                 getChar();
             }
@@ -181,6 +170,7 @@ int lex() {
         case DIGIT:
             addChar();
             getChar();
+            
             while (charClass == DIGIT) {
                 addChar();
                 getChar();
@@ -195,9 +185,31 @@ int lex() {
             
         case EOF:
             nextToken = EOF_CODE;
-            lexeme[0] = 'E'; lexeme[1] = 'O'; lexeme[2] = 'F'; lexeme[3] = 0;
+            lexeme[0] = 'E'; lexeme[1] = 'O'; lexeme[2] = 'F'; lexeme[3] = '\0';
             break;
     }
     printf("Next token is: %d, Next lexeme is %s\n", nextToken, lexeme);
     return nextToken;
+}
+
+int main(int argc, char *argv[]) {
+    if (argc != 2) {
+        printf("Usage: %s <source_file>\n", argv[0]);
+        return 1;
+    }
+    
+    if ((in_fp = fopen(argv[1], "r")) == NULL) {
+        printf("Error: Cannot open %s\n", argv[1]);
+        return 1;
+    }
+    
+    printf("--- Lexical Analysis Started ---\n");
+    getChar();
+    do {
+        lex();
+    } while (nextToken != EOF_CODE);
+    
+    printf("--- Lexical Analysis Complete ---\n");
+    fclose(in_fp);
+    return 0;
 }
