@@ -2,6 +2,9 @@
 #include <ctype.h>
 #include <string.h>
 
+/* Set to 0 before integrating with your parser */
+#define DEBUG 1
+
 /* Global declarations */
 int charClass;
 char lexeme[100];
@@ -50,13 +53,11 @@ int isKeyword(char *lex);
 #define RIGHT_BRACE 36/* } */
 #define SEMICOLON 37  /* ; */
 #define EOF_CODE -1
+#define LEX_ERROR 99  /* Handles unrecognized characters safely */
 
 int isValidBNFChar(char c) {
-    /* Standard ASCII letters */
     if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) return 1;
-    /* Turkish lowercase: ç, ğ, ı, ö, ş, ü */
     if (c == 'ç' || c == 'ğ' || c == 'ı' || c == 'ö' || c == 'ş' || c == 'ü') return 1;
-    /* Turkish uppercase: Ç, Ğ, İ, Ö, Ş, Ü */
     if (c == 'Ç' || c == 'Ğ' || c == 'İ' || c == 'Ö' || c == 'Ş' || c == 'Ü') return 1;
     return 0;
 }
@@ -83,7 +84,7 @@ void getChar() {
         else
             charClass = UNKNOWN;
     } else {
-        charClass = EOF;
+        charClass = EOF_CODE;
     }
 }
 
@@ -93,47 +94,46 @@ void getNonBlank() {
 }
 
 int lookup(char ch) {
+    addChar();
     switch (ch) {
-        case '(':
-            addChar(); nextToken = LEFT_PAREN; break;
-        case ')':
-            addChar(); nextToken = RIGHT_PAREN; break;
-        case '+':
-            addChar(); nextToken = ADD_OP; break;
-        case '-':
-            addChar(); nextToken = SUB_OP; break;
-        case '*':
-            addChar(); nextToken = MULT_OP; break;
-        case '/':
-            addChar(); nextToken = DIV_OP; break;
+        case '(': nextToken = LEFT_PAREN; break;
+        case ')': nextToken = RIGHT_PAREN; break;
+        case '+': nextToken = ADD_OP; break;
+        case '-': nextToken = SUB_OP; break;
+        case '*': nextToken = MULT_OP; break;
+        case '/': nextToken = DIV_OP; break;
+        case '{': nextToken = LEFT_BRACE; break;
+        case '}': nextToken = RIGHT_BRACE; break;
+        case ';': nextToken = SEMICOLON; break;
         case '=':
-            addChar();
+            getChar();
             if (nextChar == '=') { addChar(); nextToken = EQ_OP; }
-            else { nextToken = ASSIGN_OP; }
+            else { ungetc(nextChar, in_fp); nextToken = ASSIGN_OP; }
             break;
         case '!':
-            addChar();
+            getChar();
             if (nextChar == '=') { addChar(); nextToken = NEQ_OP; }
-            else { nextToken = EOF_CODE; }
+            else { 
+                ungetc(nextChar, in_fp); 
+                printf("Lexical Error: Invalid '!' operator\n");
+                nextToken = LEX_ERROR; 
+            }
             break;
         case '<':
-            addChar();
+            getChar();
             if (nextChar == '=') { addChar(); nextToken = LE_OP; }
-            else { nextToken = LT_OP; }
+            else { ungetc(nextChar, in_fp); nextToken = LT_OP; }
             break;
         case '>':
-            addChar();
+            getChar();
             if (nextChar == '=') { addChar(); nextToken = GE_OP; }
-            else { nextToken = GT_OP; }
+            else { ungetc(nextChar, in_fp); nextToken = GT_OP; }
             break;
-        case '{':
-            addChar(); nextToken = LEFT_BRACE; break;
-        case '}':
-            addChar(); nextToken = RIGHT_BRACE; break;
-        case ';':
-            addChar(); nextToken = SEMICOLON; break;
+            
         default:
-            addChar(); nextToken = EOF_CODE; break;
+            printf("Lexical Error: Unrecognized character '%c'\n", ch);
+            nextToken = LEX_ERROR;
+            break;
     }
     return nextToken;
 }
@@ -157,7 +157,6 @@ int lex() {
         case LETTER:
             addChar();
             getChar();
-            
             while (charClass == LETTER || charClass == DIGIT) {
                 addChar();
                 getChar();
@@ -170,7 +169,6 @@ int lex() {
         case DIGIT:
             addChar();
             getChar();
-            
             while (charClass == DIGIT) {
                 addChar();
                 getChar();
@@ -183,12 +181,16 @@ int lex() {
             getChar();
             break;
             
-        case EOF:
+        case EOF_CODE:
             nextToken = EOF_CODE;
             lexeme[0] = 'E'; lexeme[1] = 'O'; lexeme[2] = 'F'; lexeme[3] = '\0';
             break;
     }
+    
+    #if DEBUG
     printf("Next token is: %d, Next lexeme is %s\n", nextToken, lexeme);
+    #endif
+    
     return nextToken;
 }
 
