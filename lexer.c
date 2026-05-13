@@ -56,9 +56,10 @@ int isKeyword(char *lex);
 #define LEX_ERROR 99  /* Handles unrecognized characters safely */
 
 int isValidBNFChar(char c) {
-    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) return 1;
-    if (c == 'ç' || c == 'ğ' || c == 'ı' || c == 'ö' || c == 'ş' || c == 'ü') return 1;
-    if (c == 'Ç' || c == 'Ğ' || c == 'İ' || c == 'Ö' || c == 'Ş' || c == 'Ü') return 1;
+    unsigned char uc = (unsigned char)c;
+    if ((uc >= 'a' && uc <= 'z') || (uc >= 'A' && uc <= 'Z')) return 1;
+    if (uc == '_') return 1;
+    if (uc >= 128) return 1;
     return 0;
 }
 
