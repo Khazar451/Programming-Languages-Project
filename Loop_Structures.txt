@@ -1,0 +1,11 @@
+tam_sayı i;
+tam_sayı döngü_toplamı;
+
+i = 0;
+döngü_toplamı = 0;
+
+iken( i < 5)
+i = i + 1;
+
+için (i = 0; i < 10; i++)
+döngü_toplamı =  döngü_toplamı + i;

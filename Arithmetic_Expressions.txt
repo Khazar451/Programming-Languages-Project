@@ -1,0 +1,11 @@
+tam_sayı x;
+tam_sayı y;
+tam_sayı sonuç;
+
+x = 20;
+y = 4;
+
+sonuç = x + y;
+sonuç = x - y;
+sonuç = x * y;
+sonuç = x / y;

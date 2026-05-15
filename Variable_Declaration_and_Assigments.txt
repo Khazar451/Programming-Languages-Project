@@ -1,0 +1,8 @@
+tam_sayı x;
+tam_sayı y;
+tam_sayı toplam;
+
+x = 7;
+y = 6;
+
+toplam = x + y;
