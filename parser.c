@@ -238,7 +238,7 @@ void match(int expectedToken) {
 }
 
 void error() {
-    fprintf(stderr, "\n❌ SYNTAX ERROR at '%s'\n", lexeme);
+    fprintf(stderr, "\n SYNTAX ERROR at '%s'\n", lexeme);
     fprintf(stderr, "   Parser expected a valid token according to the grammar.\n");
     exit(1);
 }
@@ -253,12 +253,12 @@ void program() {
     while (nextToken != EOF_CODE) {
         stmt();
     }
-    printf("✅ Exit <program> - Parsing successful!\n");
+    printf("Exit <program> - Parsing successful!\n");
 }
 
 /* <stmt> → <declaration> | <assign> | <if_stmt> | <loop_stmt> */
 void stmt() {
-    printf("  ▶ Enter <stmt>\n");
+    printf("Enter <stmt>\n");
     switch (nextToken) {
         case INT_TYPE: declaration(); break;
         case IDENT:    assign(); break;
@@ -267,7 +267,7 @@ void stmt() {
         case FOR:      loop_stmt(); break;
         default:       error(); break;
     }
-    printf("  ✅ Exit <stmt>\n");
+    printf("Exit <stmt>\n");
 }
 
 /* <declaration> → tam_sayı <id> ";" */
@@ -281,12 +281,12 @@ void declaration() {
     match(IDENT);
     match(SEMICOLON);
     
-    printf("    ✅ Exit <declaration>\n");
+    printf("Exit <declaration>\n");
 }
 
 /* <assign> → <id> "=" <expr> ";" */
 void assign() {
-    printf("    ▶ Enter <assign>\n");
+    printf("Enter <assign>\n");
     if (nextToken == IDENT) {
         addSymbol(lexeme); /* Add the variable to the symbol table just in case it wasn't declared */
     }
@@ -294,24 +294,24 @@ void assign() {
     match(ASSIGN_OP);
     expr();
     match(SEMICOLON);
-    printf("    ✅ Exit <assign>\n");
+    printf("Exit <assign>\n");
 }
 
 /* <if_stmt> → eğer "(" <condition> ")" <statement> <optional> */
 void if_stmt() {
-    printf("    ▶ Enter <if_stmt>\n");
+    printf("Enter <if_stmt>\n");
     match(IF);
     match(LEFT_PAREN);
     condition();
     match(RIGHT_PAREN);
     stmt();
     optional();
-    printf("    ✅ Exit <if_stmt>\n");
+    printf("Exit <if_stmt>\n");
 }
 
 /* <optional> → değilse <statement> | ise "(" <condition> ")" <statement> <optional> | ε */
 void optional() {
-    printf("    ▶ Enter <optional>\n");
+    printf("Enter <optional>\n");
     if (nextToken == ELSE) {
         lex();
         stmt();
@@ -324,13 +324,13 @@ void optional() {
         optional();
     }
     /* else: ε (do nothing) */
-    printf("    ✅ Exit <optional>\n");
+    printf("Exit <optional>\n");
 }
 
 /* <loop_stmt> → iken "(" <condition> ")" <statement> 
               | için "(" <begin_index> ";" <condition> ";" <operation> ")" <statement> */
 void loop_stmt() {
-    printf("    ▶ Enter <loop_stmt>\n");
+    printf("Enter <loop_stmt>\n");
     if (nextToken == WHILE) {
         lex();
         match(LEFT_PAREN);
@@ -350,24 +350,24 @@ void loop_stmt() {
     } else {
         error();
     }
-    printf("    ✅ Exit <loop_stmt>\n");
+    printf("Exit <loop_stmt>\n");
 }
 
 /* <begin_index> → <id> "=" <expr> */
 void begin_index() {
-    printf("      ▶ Enter <begin_index>\n");
+    printf("Enter <begin_index>\n");
     if (nextToken == IDENT) {
         addSymbol(lexeme);
     }
     match(IDENT);
     match(ASSIGN_OP);
     expr();
-    printf("      ✅ Exit <begin_index>\n");
+    printf("Exit <begin_index>\n");
 }
 
 /* <operation> → <id> "++" | <id> "--" | "++" <id> | "--" <id> */
 void operation() {
-    printf("      ▶ Enter <operation>\n");
+    printf("Enter <operation>\n");
     if (nextToken == PLUSPLUS || nextToken == MINUSMINUS) {
         lex();
         match(IDENT);
@@ -381,55 +381,55 @@ void operation() {
     } else {
         error();
     }
-    printf("      ✅ Exit <operation>\n");
+    printf("Exit <operation>\n");
 }
 
 /* <condition> → <expr> <rel_op> <expr> */
 void condition() {
-    printf("      ▶ Enter <condition>\n");
+    printf("Enter <condition>\n");
     expr();
     rel_op();
     expr();
-    printf("      ✅ Exit <condition>\n");
+    printf("Exit <condition>\n");
 }
 
 /* <rel_op> → "<" | ">" | "==" | "!=" | "<=" | ">=" */
 void rel_op() {
-    printf("        ▶ Enter <rel_op>\n");
+    printf("Enter <rel_op>\n");
     switch (nextToken) {
         case LT_OP: case GT_OP: case EQ_OP: 
         case NEQ_OP: case LE_OP: case GE_OP:
             lex(); break;
         default: error(); break;
     }
-    printf("        ✅ Exit <rel_op>\n");
+    printf("Exit <rel_op>\n");
 }
 
 /* <expr> → <term> { ("+" | "-") <term> } */
 void expr() {
-    printf("        ▶ Enter <expr>\n");
+    printf("Enter <expr>\n");
     term();
     while (nextToken == ADD_OP || nextToken == SUB_OP) {
         lex();
         term();
     }
-    printf("        ✅ Exit <expr>\n");
+    printf("Exit <expr>\n");
 }
 
 /* <term> → <factor> { ("*" | "/") <factor> } */
 void term() {
-    printf("          ▶ Enter <term>\n");
+    printf("Enter <term>\n");
     factor();
     while (nextToken == MULT_OP || nextToken == DIV_OP) {
         lex();
         factor();
     }
-    printf("          ✅ Exit <term>\n");
+    printf("Exit <term>\n");
 }
 
 /* <factor> → "(" <expr> ")" | <id> | <number> */
 void factor() {
-    printf("            ▶ Enter <factor>\n");
+    printf("Enter <factor>\n");
     if (nextToken == LEFT_PAREN) {
         lex();
         expr();
@@ -442,7 +442,7 @@ void factor() {
     } else {
         error();
     }
-    printf("            ✅ Exit <factor>\n");
+    printf("Exit <factor>\n");
 }
 
 /* ==========================================
